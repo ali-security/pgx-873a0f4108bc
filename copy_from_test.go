@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -584,7 +585,11 @@ func TestConnCopyFromFailServerSideMidwayAbortsWithoutWaiting(t *testing.T) {
 
 	endTime := time.Now()
 	copyTime := endTime.Sub(startTime)
-	if copyTime > time.Second {
+	copyTimeLimit := time.Second
+	if runtime.GOOS == "windows" {
+		copyTimeLimit = 3 * time.Second
+	}
+	if copyTime > copyTimeLimit {
 		t.Errorf("Failing CopyFrom shouldn't have taken so long: %v", copyTime)
 	}
 

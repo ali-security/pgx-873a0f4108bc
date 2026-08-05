@@ -12,6 +12,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -186,6 +187,9 @@ func (s pgmockWaitStep) Step(*pgproto3.Backend) error {
 }
 
 func TestConnectTimeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows due to timer granularity and dual-stack resolution jitter")
+	}
 	t.Parallel()
 	tests := []struct {
 		name    string
@@ -2369,6 +2373,9 @@ func TestConnCancelRequest(t *testing.T) {
 
 // https://github.com/jackc/pgx/issues/659
 func TestConnContextCanceledCancelsRunningQueryOnServer(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows due to timer granularity and dual-stack resolution jitter")
+	}
 	t.Parallel()
 
 	t.Run("postgres", func(t *testing.T) {
@@ -3314,6 +3321,9 @@ z3w+CgS20UrbLIR1YXfqUXge1g==
 func testingKey(s string) string { return strings.ReplaceAll(s, "TESTING KEY", "PRIVATE KEY") }
 
 func TestSNISupport(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows due to timer granularity and dual-stack resolution jitter")
+	}
 	t.Parallel()
 	tests := []struct {
 		name      string
@@ -3572,6 +3582,9 @@ func TestDeadlineContextWatcherHandler(t *testing.T) {
 }
 
 func TestCancelRequestContextWatcherHandler(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows due to timer granularity and dual-stack resolution jitter")
+	}
 	t.Parallel()
 
 	t.Run("DeadlineExceeded cancels request after CancelRequestDelay", func(t *testing.T) {

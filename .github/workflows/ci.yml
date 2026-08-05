@@ -154,3 +154,55 @@ jobs:
         run: go test -parallel=1 -race  ./...
         env:
           PGX_TEST_DATABASE: ${{ steps.postgres.outputs.connection-uri }}
+
+  module-zip:
+    name: Build module zip
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Build module zip
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/modzip" "$RUNNER_TEMP/dist"
+          cat > "$RUNNER_TEMP/modzip/main.go" <<'GOEOF'
+          package main
+
+          import (
+              "os"
+
+              "golang.org/x/mod/module"
+              "golang.org/x/mod/zip"
+          )
+
+          func main() {
+              src := os.Args[1]
+              out := os.Args[2]
+              f, err := os.Create(out)
+              if err != nil {
+                  panic(err)
+              }
+              defer f.Close()
+              v := module.Version{Path: "github.com/jackc/pgx/v5", Version: "v5.7.2"}
+              if err := zip.CreateFromDir(f, v, src); err != nil {
+                  panic(err)
+              }
+          }
+          GOEOF
+          cd "$RUNNER_TEMP/modzip"
+          go mod init modzip
+          go get golang.org/x/mod@v0.24.0
+          go run . "$GITHUB_WORKSPACE" "$RUNNER_TEMP/dist/v5.7.2.zip"
+
+      - name: Upload module zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-zip
+          path: ${{ runner.temp }}/dist/v5.7.2.zip
+          if-no-files-found: error

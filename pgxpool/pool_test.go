@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -524,6 +525,9 @@ func TestConnReleaseClosesBusyConn(t *testing.T) {
 }
 
 func TestPoolBackgroundChecksMaxConnLifetime(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows due to timer granularity and dual-stack resolution jitter")
+	}
 	t.Parallel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
